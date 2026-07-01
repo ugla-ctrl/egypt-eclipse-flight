@@ -5,9 +5,10 @@ Luxor, Egypt** — the Nile, the cultivated valley, the Valley of the Kings, and
 **al-Qurn** — while a total solar eclipse sweeps the desert to totality. Three.js (r128, via CDN), no build step.
 
 Built in the house style of the Iceland *hellissandur · eclipse flight* sim, retargeted to a desert:
-same chase-cam + real-DEM terrain + baked satellite imagery + corner minimap, but you fly a colourful
-balloon (Egyptian-jewel gores over a glowing burner + wicker basket) with a global elevation source
-(Luxor is at 25.7°N, far outside ArcticDEM) and a desert-appropriate totality.
+same chase-cam + real-DEM terrain + baked satellite imagery + corner minimap, but you fly a rounded
+**Egyptian-decorated hot-air balloon** (jewel-tone gores + a gold collar of ankh / Eye-of-Horus / sun-disk
+motifs over a glowing burner + wicker basket) with a global elevation source (Luxor is at 25.7°N, far
+outside ArcticDEM), **real 3D buildings**, and a scientifically-placed desert totality.
 
 ## What's real here
 
@@ -23,11 +24,17 @@ The **surface** is real too: **Esri World Imagery** is baked into a texture and 
 so you fly over photographic Luxor — the Nile, the green cultivated strip, the desert, the temple sites.
 (If that texture ever fails to load, the sim falls back to an elevation colour-ramp, so it always works.)
 
-You lift off over the **Marsam Hotel** (25.7242° N, 32.6065° E) on the west bank, drifting toward al-Qurn.
+The **buildings** are real too: ~4,700 **OpenStreetMap** footprints (west-bank villages, the east-bank
+city, and 175 temple/landmark structures — Karnak, Medinet Habu, the Ramesseum, Deir el-Bahari…) are
+baked to local metres + heights and extruded onto the terrain, temples standing taller so they read from the air.
 
-The eclipse: no aurora at 25°N — instead the desert's signature **360° "false sunset"** rings the horizon
-in copper as the moon's shadow rushes in, stars come out, and the corona blazes. (Luxor sits near the
-centreline of the total solar eclipse of **2 August 2027** — one of the longest of the century.)
+You lift off over the **Marsam Hotel** (25.7242° N, 32.6065° E) on the west bank, facing the eclipse.
+
+The eclipse is **scientifically placed**: at mid-totality of the real **2 August 2027** total eclipse, the
+Sun stands **~81.7° above the horizon at azimuth ~197° (SSW)** over Luxor (verified against timeanddate,
+NASA/Espenak and Wikipedia) — nearly overhead, unlike Iceland's low sun. So as totality nears the camera
+lifts skyward to reveal the majestic corona overhead, with stars and a 360° copper "false sunset" ringing
+the horizon. (Luxor sits near the centreline — ~6 min 22 s of totality, one of the longest of the century.)
 
 ## Controls
 

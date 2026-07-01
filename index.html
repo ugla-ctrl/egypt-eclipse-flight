@@ -170,28 +170,99 @@
     });
   }
 
+  // ---------------------------------------------------------------- real buildings (OSM footprints)
+  // Real OpenStreetMap building footprints for Luxor, baked to local metres + heights, extruded here
+  // into ONE merged geometry draped on the terrain: sandy homes across the west-bank villages + east-
+  // bank city, pale-limestone temples/landmarks (Karnak, Medinet Habu, the Ramesseum, Deir el-Bahari…).
+  var BUILD_EXAG=EXAG;   // scale building heights with the terrain's vertical exaggeration so they sit believably
+  function buildBuildings(list){
+    var pos=[],col=[],cN=new THREE.Color(0xc9b389),cL=new THREE.Color(0xe6dcbf),tmp=new THREE.Color();
+    function tri(ax,ay,az,bx,by,bz,cx,cy,cz,r,g,b){pos.push(ax,ay,az,bx,by,bz,cx,cy,cz);col.push(r,g,b,r,g,b,r,g,b);}
+    for(var bi=0;bi<list.length;bi++){
+      var B=list[bi],f=B.p,npt=f.length>>1; if(npt<3)continue;
+      var vx=[],vz=[],baseY=Infinity;
+      for(var i=0;i<npt;i++){var x=f[i*2],z=f[i*2+1];vx.push(x);vz.push(z);var gy=H(x,z);if(gy<baseY)baseY=gy;}
+      if(!isFinite(baseY))continue;
+      // orient the ring consistently (shoelace on the x/z plane) so the roof triangulates cleanly
+      var A=0;for(var i=0;i<npt;i++){var j=(i+1)%npt;A+=vx[i]*vz[j]-vx[j]*vz[i];}
+      if(A<0){vx.reverse();vz.reverse();}
+      var bex=B.t?3.4:BUILD_EXAG;   // temples/landmarks stand taller so they read from the air
+      baseY-=1.5; var topY=baseY+Math.max(4,B.h*bex);
+      var vfac=0.82+0.30*vn(vx[0]*0.6,vz[0]*0.6);            // per-building tonal variation
+      tmp.copy(B.t?cL:cN).multiplyScalar(vfac); var r=tmp.r,g=tmp.g,b=tmp.b;
+      for(var i=0;i<npt;i++){var j=(i+1)%npt,x0=vx[i],z0=vz[i],x1=vx[j],z1=vz[j];
+        tri(x0,baseY,z0,x1,baseY,z1,x1,topY,z1,r,g,b);
+        tri(x0,baseY,z0,x1,topY,z1,x0,topY,z0,r,g,b);}
+      var contour=[];for(var i=0;i<npt;i++)contour.push(new THREE.Vector2(vx[i],vz[i]));
+      var tris=THREE.ShapeUtils.triangulateShape(contour,[]);
+      var rr=Math.min(1,r*1.1),rg=Math.min(1,g*1.1),rb=Math.min(1,b*1.1);   // roofs a touch lighter
+      for(var t=0;t<tris.length;t++){var a=contour[tris[t][0]],c2=contour[tris[t][1]],d2=contour[tris[t][2]];
+        tri(a.x,topY,a.y,c2.x,topY,c2.y,d2.x,topY,d2.y,rr,rg,rb);}
+    }
+    var geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+    geo.computeVertexNormals();
+    scene.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.93,metalness:0,side:THREE.DoubleSide})));
+  }
+  function loadBuildings(){
+    fetch('assets/luxor-buildings.json').then(function(r){return r.json();}).then(function(d){
+      if(d&&d.buildings&&d.buildings.length)buildBuildings(d.buildings);
+    }).catch(function(){});   // buildings are a nice-to-have — the sim runs fine without them
+  }
+
+  // ---------------------------------------------------------------- Egyptian balloon skin (canvas texture)
+  // A hand-drawn, tileable Egyptian decoration wrapped around the envelope: jewel-tone gores with gold
+  // seams, a gold collar band of alternating ankh / Eye-of-Horus / sun-disk motifs, an ankh frieze near
+  // the crown, a lotus frieze near the mouth, and a radiant sun crown at the top. u wraps around the
+  // balloon, v runs mouth(0)→crown(1); with the default flipY the crown is drawn at the top of the canvas.
+  function egyptianEnvelopeTex(){
+    var W=1536,H=576,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+    var LAPIS='#173a86',GOLD='#e7bb3c',GOLDD='#a9801c',TURQ='#12968d',CARN='#b0343f',DARK='#0d1430';
+    // vertical gores — gold alternates with jewel tones
+    var goreCols=[LAPIS,GOLD,TURQ,GOLD,CARN,GOLD],NG=12;
+    for(var i=0;i<NG;i++){x.fillStyle=goreCols[i%goreCols.length];x.fillRect(i*W/NG,0,W/NG+1,H);}
+    x.strokeStyle=GOLDD;x.lineWidth=4;for(var i=0;i<=NG;i++){x.beginPath();x.moveTo(i*W/NG,0);x.lineTo(i*W/NG,H);x.stroke();}
+    function ankh(cx,cy,s,col){x.save();x.translate(cx,cy);x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(2,s*0.18);x.lineCap='round';
+      x.beginPath();x.ellipse(0,-s*0.52,s*0.30,s*0.40,0,0,Math.PI*2);x.stroke();
+      x.beginPath();x.moveTo(0,-s*0.12);x.lineTo(0,s*0.82);x.stroke();
+      x.beginPath();x.moveTo(-s*0.44,s*0.06);x.lineTo(s*0.44,s*0.06);x.stroke();x.restore();}
+    function eye(cx,cy,s,col){x.save();x.translate(cx,cy);x.strokeStyle=col;x.fillStyle=col;x.lineWidth=Math.max(2,s*0.15);x.lineCap='round';
+      x.beginPath();x.moveTo(-s*0.75,-s*0.12);x.quadraticCurveTo(0,-s*0.62,s*0.75,-s*0.15);x.stroke();
+      x.beginPath();x.moveTo(-s*0.75,-s*0.12);x.quadraticCurveTo(0,s*0.34,s*0.55,s*0.02);x.stroke();
+      x.beginPath();x.arc(0,-s*0.06,s*0.17,0,Math.PI*2);x.fill();
+      x.beginPath();x.moveTo(s*0.55,s*0.02);x.lineTo(s*1.02,s*0.24);x.stroke();
+      x.beginPath();x.moveTo(-s*0.18,s*0.24);x.quadraticCurveTo(-s*0.1,s*0.72,-s*0.6,s*0.66);x.stroke();x.restore();}
+    function sun(cx,cy,s,col){x.fillStyle=col;x.beginPath();x.arc(cx,cy,s*0.5,0,Math.PI*2);x.fill();x.strokeStyle=DARK;x.lineWidth=Math.max(2,s*0.09);x.beginPath();x.arc(cx,cy,s*0.5,0,Math.PI*2);x.stroke();}
+    function lotus(cx,cy,s,col){x.save();x.translate(cx,cy);x.fillStyle=col;function petal(a){x.save();x.rotate(a);x.beginPath();x.moveTo(0,s*0.5);x.quadraticCurveTo(s*0.30,-s*0.12,0,-s*0.62);x.quadraticCurveTo(-s*0.30,-s*0.12,0,s*0.5);x.fill();x.restore();}petal(0);petal(-0.5);petal(0.5);x.restore();}
+    // collar band (main feature) — dark band with gold ankh / eye / sun motifs
+    var by=H*0.40,bh=H*0.21;x.fillStyle=DARK;x.fillRect(0,by,W,bh);x.fillStyle=GOLD;x.fillRect(0,by-6,W,6);x.fillRect(0,by+bh,W,6);
+    var NM=9,cyb=by+bh/2,s=bh*0.60;for(var i=0;i<NM;i++){var cx=(i+0.5)*W/NM,k=i%3;if(k===0)ankh(cx,cyb,s,GOLD);else if(k===1)eye(cx,cyb-s*0.04,s,GOLD);else sun(cx,cyb,s,GOLD);}
+    // upper ankh frieze
+    var uy=H*0.15,uh=H*0.12;x.fillStyle=DARK;x.fillRect(0,uy,W,uh);x.fillStyle=GOLD;x.fillRect(0,uy-4,W,4);x.fillRect(0,uy+uh,W,4);
+    var NU=18;for(var i=0;i<NU;i++)ankh((i+0.5)*W/NU,uy+uh/2,uh*0.5,GOLD);
+    // base lotus frieze (near the mouth)
+    var ly=H*0.82,lh=H*0.16;x.fillStyle=DARK;x.fillRect(0,ly,W,lh);x.fillStyle=GOLD;x.fillRect(0,ly-5,W,5);x.fillRect(0,ly+lh,W,5);
+    var NL=14;for(var i=0;i<NL;i++)lotus((i+0.5)*W/NL,ly+lh*0.52,lh*0.72,GOLD);
+    // radiant sun crown at the very top (converges to the apex)
+    x.fillStyle=DARK;x.fillRect(0,0,W,H*0.1);var NR=24;for(var i=0;i<NR;i+=2){x.fillStyle=GOLD;x.beginPath();x.moveTo(i*W/NR,H*0.1);x.lineTo((i+1)*W/NR,0);x.lineTo((i+2)*W/NR,H*0.1);x.closePath();x.fill();}
+    x.fillStyle=GOLD;x.fillRect(0,H*0.1,W,5);
+    var t=new THREE.CanvasTexture(c);t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.ClampToEdgeWrapping;t.anisotropy=8;return t;
+  }
+
   // ---------------------------------------------------------------- the aircraft (hot-air balloon)
-  // Built from primitives so the sim stays single-file/no-asset. An Egyptian-jewel gored envelope
-  // (gold / lapis / turquoise / carnelian / cream) over a burner + wicker basket on rope lines.
-  // Group origin sits at the basket (= st.pos); the envelope towers above. Frame: −z = forward,
-  // +y = up. userData holds the animated flame + burner light (flickered each frame by animateBalloon).
+  // Built from primitives so the sim stays single-file/no-asset. A rounder, fuller envelope wrapped in
+  // an Egyptian-decorated skin (egyptianEnvelopeTex) over a burner + wicker basket on rope lines. Group
+  // origin sits at the basket (= st.pos); the envelope towers above. Frame: −z = forward, +y = up.
+  // userData holds the animated flame + burner light (flickered each frame by animateBalloon).
   function buildBalloon(){
     var g=new THREE.Group(), DS=THREE.DoubleSide;
-    var gores=[0xe0b53a,0x1f5aa8,0x18a89b,0xb2384a,0xf0e2c0];   // gold, lapis, turquoise, carnelian, cream
     var H0=6.0;                                                  // envelope mouth height above the basket origin
-    // Teardrop/onion envelope profile [radius, height]: narrow mouth at y0, bulge, tapered crown.
-    var prof=[[0.35,0],[1.7,1.0],[3.7,2.6],[5.6,4.6],[7.0,7.0],[7.55,9.6],[7.2,12.2],[6.0,14.6],[4.1,16.8],[2.0,18.4],[0.0,19.4]];
+    // Rounder, fuller envelope profile [radius, height] (the old teardrop read as pointy/ugly).
+    var prof=[[1.3,0],[3.2,0.9],[5.2,2.2],[6.9,3.9],[8.0,5.9],[8.55,8.2],[8.6,10.6],[8.2,12.9],[7.3,14.9],[5.9,16.5],[4.0,17.7],[2.0,18.5],[0.0,19.0]];
     var P=prof.map(function(p){return new THREE.Vector2(p[0],p[1]);});
-    // Envelope as N single-colour lathe gores → crisp vertical stripes (classic balloon look).
-    var env=new THREE.Group(); env.position.y=H0;
-    var N=16;
-    for(var k=0;k<N;k++){
-      var geo=new THREE.LatheGeometry(P,4,k*(2*Math.PI/N),2*Math.PI/N); geo.computeVertexNormals();
-      var base=new THREE.Color(gores[k%gores.length]);
-      var m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:base,roughness:0.55,metalness:0.04,side:DS,emissive:base.clone().multiplyScalar(0.05)}));
-      env.add(m);
-    }
-    g.add(env);
+    var envMesh=new THREE.Mesh(new THREE.LatheGeometry(P,64),new THREE.MeshStandardMaterial({map:egyptianEnvelopeTex(),roughness:0.5,metalness:0.06,side:DS}));
+    envMesh.geometry.computeVertexNormals(); envMesh.position.y=H0; g.add(envMesh);
     // Mouth / throat ring (scorched fabric) just below the envelope.
     var throat=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.95,1.4,20,1,true),new THREE.MeshStandardMaterial({color:0x241a12,roughness:0.9,side:DS}));
     throat.position.y=H0-0.5; g.add(throat);
@@ -257,18 +328,21 @@
   }
 
   // ---------------------------------------------------------------- flight state
-  var SUNDIR=new THREE.Vector3(0.32,0.70,-0.64).normalize();   // high SE desert sun
-  var SPAWN=new THREE.Vector3(0,1800,0), START_ALT=1800, facePeak=0;  // finalised once the DEM loads
+  // Scientifically accurate Sun at mid-totality of the 2 Aug 2027 eclipse over Luxor: altitude 81.7°,
+  // azimuth 197° (SSW). In sim axes (+x east, +z south, +y up): x=cos(alt)sin(az), y=sin(alt), z=-cos(alt)cos(az).
+  var SUNDIR=new THREE.Vector3(-0.042,0.990,0.138).normalize();
+  var SUN_AZ=197*Math.PI/180;                                 // eclipse azimuth (for the spawn heading)
+  var SPAWN=new THREE.Vector3(0,1200,0), START_ALT=1200, facePeak=0;  // finalised once the DEM loads
   var st={pos:SPAWN.clone(),heading:0,pitch:-0.02,roll:0,throttle:0.4,speed:80,boost:0,ecl:0};
   var MINS=28,MAXS=82,keys={},BOUND=12500;   // metres/second — a serene balloon drift (slower than the jet)
 
   function resetFlight(){st.pos.copy(SPAWN);st.heading=facePeak;st.pitch=-0.02;st.roll=0;st.throttle=0.4;st.speed=40;st.ecl=0;}
 
-  // Seat the spawn over the Marsam Hotel, nose pointed at al-Qurn / the Theban hills (both from the baked coords).
+  // Seat the spawn over the Marsam Hotel, facing SSW toward the eclipse (so the corona rises dead ahead
+  // as totality nears). The sim's forward azimuth = −heading, so face the Sun by heading = −SUN_AZ.
   function setSpawn(){
     SPAWN.set(DEM.spawn.x,START_ALT,DEM.spawn.z);
-    var gx=DEM.peak.x-DEM.spawn.x, gz=DEM.peak.z-DEM.spawn.z;
-    facePeak=Math.atan2(-gx,-gz);                     // heading whose forward (-sinθ,-cosθ) aims at the peak
+    facePeak=-SUN_AZ;
     resetFlight();
     var q=new THREE.Quaternion().setFromEuler(new THREE.Euler(st.pitch,st.heading,st.roll,'YXZ'));
     balloon.position.copy(st.pos); balloon.quaternion.copy(q);
@@ -335,17 +409,26 @@
       // soft turn-back at the edge of the baked area (no sea to fall into — just keep you over Luxor)
       if(Math.hypot(st.pos.x,st.pos.z)>BOUND){var want=Math.atan2(st.pos.x,st.pos.z),diff=want-st.heading;while(diff>Math.PI)diff-=2*Math.PI;while(diff<-Math.PI)diff+=2*Math.PI;st.heading+=diff*Math.min(1,dt*0.6);}
       if(keys['r'])resetFlight();
+      // --- eclipse phase (computed early so the camera can tilt up toward the overhead corona) ---
+      st.ecl+=dt*(keys['e']?9:1)/70;if(st.ecl>1)st.ecl-=1;var phase=st.ecl,sep=Math.abs(phase-0.5)*2,coverage=smooth(1.0,0.0,sep),totality=smooth(0.86,0.99,coverage);
       var euler=new THREE.Euler(st.pitch,st.heading,st.roll,'YXZ'),q=new THREE.Quaternion().setFromEuler(euler),fwd=new THREE.Vector3(0,0,-1).applyQuaternion(q);
       balloon.position.copy(st.pos);balloon.quaternion.copy(q);
       animateBalloon(now,dt);
       var camPos=st.pos.clone().add(new THREE.Vector3(0,14,60).applyQuaternion(q));
-      camera.position.lerp(camPos,Math.min(1,dt*2.4));camera.lookAt(st.pos.clone().add(fwd.clone().multiplyScalar(54)).add(new THREE.Vector3(0,9,0)));camera.up.set(0,1,0);
-      // --- eclipse (choreography unchanged from the Iceland original) ---
-      st.ecl+=dt*(keys['e']?9:1)/70;if(st.ecl>1)st.ecl-=1;var phase=st.ecl,sep=Math.abs(phase-0.5)*2,coverage=smooth(1.0,0.0,sep),totality=smooth(0.86,0.99,coverage);
+      camera.position.lerp(camPos,Math.min(1,dt*2.4));
+      // The real 2 Aug 2027 Luxor eclipse is nearly overhead (alt ~82°, az ~197° SSW) — unlike Iceland's
+      // low sun. As totality nears, pan the gaze from the landscape straight up the Sun's direction so the
+      // majestic corona rises into view above the balloon (SUNDIR points at the corona from the camera).
+      var baseT=st.pos.clone().add(fwd.clone().multiplyScalar(48)).add(new THREE.Vector3(0,9,0));
+      var baseDir=baseT.sub(camera.position).normalize();
+      var revealAmt=smooth(0.15,0.9,coverage)*0.80;   // pan the gaze up to centre the overhead corona at totality
+      var lookDir=baseDir.lerp(SUNDIR,revealAmt).normalize();
+      camera.lookAt(camera.position.clone().add(lookDir.multiplyScalar(300)));camera.up.set(0,1,0);
+      // --- eclipse sky (choreography from the Iceland original; corona enlarged for the high overhead sun) ---
       var sunPos=camera.position.clone().add(SUNDIR.clone().multiplyScalar(16000));sunS.position.copy(sunPos);corona.position.copy(sunPos);
       var right=new THREE.Vector3().crossVectors(SUNDIR,new THREE.Vector3(0,1,0)).normalize(),up=new THREE.Vector3().crossVectors(right,SUNDIR).normalize();
       var slide=(phase-0.5)*2,off=right.clone().multiplyScalar(slide*1500).add(up.clone().multiplyScalar(slide*260));moonS.position.copy(sunPos).add(off);
-      corona.material.opacity=totality;corona.scale.setScalar(1800+totality*1400);sunS.material.opacity=1-totality*0.65;stars.position.copy(camera.position);stars.material.opacity=totality;
+      corona.material.opacity=totality;corona.scale.setScalar(2600+totality*3000);sunS.material.opacity=1-totality*0.65;stars.position.copy(camera.position);stars.material.opacity=totality;
       // horizon "false sunset" — builds through deep partial, peaks at totality
       var glowAmt=smooth(0.55,0.99,coverage);glow.visible=glowAmt>0.01;if(glow.visible){glowMat.uniforms.uIntensity.value=glowAmt;glowMat.uniforms.uTime.value=now*0.001;glow.position.copy(camera.position);}
       var lightF=0.16+0.84*Math.pow(1-coverage,1.4);sun.intensity=1.25*lightF;hemi.intensity=0.18+0.55*lightF;sun.color.setHSL(0.09,0.55,0.5+0.22*lightF);
@@ -377,7 +460,7 @@
 
   // ---------------------------------------------------------------- boot
   loadHeightmap(function(ok){
-    if(ok){buildTerrain();setSpawn();buildMinimap();var a=document.getElementById('f-attr');if(a)a.textContent='imagery © esri, maxar, earthstar · elevation © aws terrain / srtm';}
+    if(ok){buildTerrain();setSpawn();buildMinimap();loadBuildings();var a=document.getElementById('f-attr');if(a)a.textContent='imagery © esri · elevation © aws terrain / srtm · buildings © openstreetmap';}
     demReady=true;if(flyEl)flyEl.textContent='click to fly';
   });
   requestAnimationFrame(loop);
