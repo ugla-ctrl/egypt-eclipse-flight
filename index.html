@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Luxor Eclipse Flight</title>
+<title>Egypt Eclipse Flight</title>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg"/>
-<meta name="description" content="Fly the Theban west bank of Luxor — the Nile, the Valley of the Kings, and al-Qurn — as a total solar eclipse sweeps the desert to totality."/>
+<meta name="description" content="Drift a hot-air balloon over the Theban west bank of Egypt — the Nile, the Valley of the Kings, and al-Qurn — as a total solar eclipse sweeps the desert to totality."/>
 <!-- Open Graph / social share card -->
 <meta property="og:type" content="website"/>
-<meta property="og:title" content="Luxor Eclipse Flight"/>
-<meta property="og:description" content="Fly the Theban west bank of Luxor as a total solar eclipse sweeps the desert to totality."/>
+<meta property="og:title" content="Egypt Eclipse Flight"/>
+<meta property="og:description" content="Drift a hot-air balloon over the Theban west bank of Egypt as a total solar eclipse sweeps the desert to totality."/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Luxor Eclipse Flight"/>
-<meta name="twitter:description" content="Fly the Theban west bank of Luxor as a total solar eclipse sweeps the desert to totality."/>
+<meta name="twitter:title" content="Egypt Eclipse Flight"/>
+<meta name="twitter:description" content="Drift a hot-air balloon over the Theban west bank of Egypt as a total solar eclipse sweeps the desert to totality."/>
 <style>
   html,body{margin:0;height:100%;background:#0a0a12;overflow:hidden;font-family:'Space Grotesk',system-ui,sans-serif}
   #fwrap{position:relative;width:100vw;height:100vh;height:100dvh}
@@ -36,7 +36,7 @@
     <div class="g" style="position:absolute;right:26px;top:50%;transform:translateY(-50%);text-align:right"><div id="f-alt" style="font-size:32px;font-weight:500;line-height:1">0</div><div style="font-size:10px;letter-spacing:.26em;color:#c79a54;text-transform:uppercase;margin-top:4px">m · altitude</div></div>
     <div style="position:absolute;top:50%;left:50%;width:120px;height:120px;transform:translate(-50%,-50%);opacity:.4"><div style="position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(244,200,116,.6)"></div><div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(244,200,116,.6)"></div></div>
     <div style="position:absolute;right:26px;bottom:26px;width:14px;height:160px;border:1px solid rgba(244,200,116,.4);border-radius:8px;overflow:hidden"><i id="f-thr" style="position:absolute;left:0;right:0;bottom:0;height:40%;background:#f4c874;display:block"></i></div>
-    <div id="f-hint-hud" style="position:absolute;left:26px;bottom:22px;font-size:11px;letter-spacing:.1em;color:#c79a54;line-height:1.7">↑↓ pitch · ←→ bank · W/S throttle · space boost · E hasten eclipse · R reset</div>
+    <div id="f-hint-hud" style="position:absolute;left:26px;bottom:22px;font-size:11px;letter-spacing:.1em;color:#c79a54;line-height:1.7">↑↓ climb · ←→ steer · W/S drift · space burner · E hasten eclipse · R reset</div>
     <!-- Data attribution (required); text is filled from the heightmap sidecar so it stays correct per-source -->
     <div id="f-attr" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.08em;color:#8a7a58;opacity:.6"></div>
   </div>
@@ -48,10 +48,10 @@
 
   <!-- Start overlay; the button stays "loading terrain…" until the DEM is decoded -->
   <div id="f-start" style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,8,14,.82);text-align:center;cursor:pointer">
-    <div id="f-title" style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:56px;color:#f4f1ea">Luxor Eclipse Flight</div>
-    <div id="f-sub" style="margin-top:14px;color:#c9c0ad;font-size:14px;max-width:40ch">Fly the Theban west bank — the Nile, the Valley of the Kings, al-Qurn — as a total solar eclipse sweeps the desert to totality</div>
+    <div id="f-title" style="font-family:'Cormorant Garamond',serif;font-weight:300;font-size:56px;color:#f4f1ea">Egypt Eclipse Flight</div>
+    <div id="f-sub" style="margin-top:14px;color:#c9c0ad;font-size:14px;max-width:40ch">Drift a hot-air balloon over the Theban west bank — the Nile, the Valley of the Kings, al-Qurn — as a total solar eclipse sweeps the desert to totality</div>
     <div id="f-fly" style="margin-top:30px;padding:14px 32px;border:1px solid #f4c874;border-radius:100px;color:#f4c874;font-size:12px;letter-spacing:.3em;text-transform:uppercase">loading terrain…</div>
-    <div id="f-hint-start" style="margin-top:24px;font-size:11px;color:#8a8168;letter-spacing:.12em">↑↓ pitch · ←→ bank · W/S throttle · space boost · E hasten eclipse</div>
+    <div id="f-hint-start" style="margin-top:24px;font-size:11px;color:#8a8168;letter-spacing:.12em">↑↓ climb · ←→ steer · W/S drift · space burner · E hasten eclipse</div>
   </div>
 </div>
 
@@ -170,73 +170,70 @@
     });
   }
 
-  // ---------------------------------------------------------------- the aircraft (private jet)
-  // Built from primitives so the sim stays single-file/no-asset. Frame: −z = forward (nose),
-  // +z = aft (tail), +x = right wing, +y = up. White-with-navy livery, tinted glass, metal engines.
-  function buildJet(){
+  // ---------------------------------------------------------------- the aircraft (hot-air balloon)
+  // Built from primitives so the sim stays single-file/no-asset. An Egyptian-jewel gored envelope
+  // (gold / lapis / turquoise / carnelian / cream) over a burner + wicker basket on rope lines.
+  // Group origin sits at the basket (= st.pos); the envelope towers above. Frame: −z = forward,
+  // +y = up. userData holds the animated flame + burner light (flickered each frame by animateBalloon).
+  function buildBalloon(){
     var g=new THREE.Group(), DS=THREE.DoubleSide;
-    var body=new THREE.MeshStandardMaterial({color:0xf2f3f5,roughness:0.32,metalness:0.15,side:DS});
-    var accent=new THREE.MeshStandardMaterial({color:0x1b2a4a,roughness:0.34,metalness:0.3,side:DS});
-    var glass=new THREE.MeshStandardMaterial({color:0x0b0d14,roughness:0.12,metalness:0.55});
-    var metal=new THREE.MeshStandardMaterial({color:0x3a3d44,roughness:0.35,metalness:0.85});
-    var darkM=new THREE.MeshStandardMaterial({color:0x0d0f14,roughness:0.5,metalness:0.6});
-
-    // Fuselage — smooth lathe profile [radius, station]; station 0 = tail, 30 = nose.
-    var prof=[[0,0],[0.45,1.2],[0.85,3],[1.25,6],[1.55,10],[1.68,14],[1.68,19.5],[1.55,22.5],[1.28,25.5],[0.92,28],[0.5,29.6],[0,30]];
-    var fus=new THREE.Mesh(new THREE.LatheGeometry(prof.map(function(p){return new THREE.Vector2(p[0],p[1]);}),28),body);
-    fus.rotation.x=-Math.PI/2; fus.position.z=15; g.add(fus);   // → nose at z −15, tail at z +15
-
-    // Cockpit windscreen (tinted glass on the upper nose).
-    var wind=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),glass);
-    wind.scale.set(1.3,0.6,2.1); wind.position.set(0,0.8,-10); g.add(wind);
-
-    // Cabin windows + a painted cheat-line, both sides.
-    for(var si=-1;si<=1;si+=2){
-      var cl=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.3,23),accent);
-      cl.position.set(si*1.6,0.04,1); g.add(cl);
-      for(var w=0;w<8;w++){
-        var win=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.4,0.5),glass);
-        win.position.set(si*1.64,0.5,-6.5+w*1.6); g.add(win);
-      }
+    var gores=[0xe0b53a,0x1f5aa8,0x18a89b,0xb2384a,0xf0e2c0];   // gold, lapis, turquoise, carnelian, cream
+    var H0=6.0;                                                  // envelope mouth height above the basket origin
+    // Teardrop/onion envelope profile [radius, height]: narrow mouth at y0, bulge, tapered crown.
+    var prof=[[0.35,0],[1.7,1.0],[3.7,2.6],[5.6,4.6],[7.0,7.0],[7.55,9.6],[7.2,12.2],[6.0,14.6],[4.1,16.8],[2.0,18.4],[0.0,19.4]];
+    var P=prof.map(function(p){return new THREE.Vector2(p[0],p[1]);});
+    // Envelope as N single-colour lathe gores → crisp vertical stripes (classic balloon look).
+    var env=new THREE.Group(); env.position.y=H0;
+    var N=16;
+    for(var k=0;k<N;k++){
+      var geo=new THREE.LatheGeometry(P,4,k*(2*Math.PI/N),2*Math.PI/N); geo.computeVertexNormals();
+      var base=new THREE.Color(gores[k%gores.length]);
+      var m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:base,roughness:0.55,metalness:0.04,side:DS,emissive:base.clone().multiplyScalar(0.05)}));
+      env.add(m);
     }
-
-    // Extruded swept surface from a planform (2D points), returned unrotated.
-    function surface(pts,depth,mat){
-      var sh=new THREE.Shape(); sh.moveTo(pts[0][0],pts[0][1]);
-      for(var i=1;i<pts.length;i++) sh.lineTo(pts[i][0],pts[i][1]);
-      return new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:depth,bevelEnabled:false}),mat);
+    g.add(env);
+    // Mouth / throat ring (scorched fabric) just below the envelope.
+    var throat=new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.95,1.4,20,1,true),new THREE.MeshStandardMaterial({color:0x241a12,roughness:0.9,side:DS}));
+    throat.position.y=H0-0.5; g.add(throat);
+    // Burner cage — four metal uprights.
+    var steel=new THREE.MeshStandardMaterial({color:0x565b62,metalness:0.9,roughness:0.35});
+    for(var s2=0;s2<4;s2++){var a=s2*Math.PI/2;var up=new THREE.Mesh(new THREE.CylinderGeometry(0.13,0.13,2.4,8),steel);up.position.set(Math.cos(a)*0.9,H0-2.4,Math.sin(a)*0.9);g.add(up);}
+    // Twin gas flames (additive) + a warm point light that flickers — the balloon's glow at totality.
+    var flameOuter=new THREE.Mesh(new THREE.ConeGeometry(0.85,3.1,16,1,true),new THREE.MeshBasicMaterial({color:0xff8a2a,transparent:true,opacity:0.7,blending:THREE.AdditiveBlending,depthWrite:false,side:DS}));
+    flameOuter.position.y=H0-2.1; g.add(flameOuter);
+    var flameInner=new THREE.Mesh(new THREE.ConeGeometry(0.42,1.9,14,1,true),new THREE.MeshBasicMaterial({color:0x74bcff,transparent:true,opacity:0.82,blending:THREE.AdditiveBlending,depthWrite:false,side:DS}));
+    flameInner.position.y=H0-2.5; g.add(flameInner);
+    var light=new THREE.PointLight(0xffa23a,1.0,150,2.0); light.position.set(0,H0-2.1,0); g.add(light);
+    // Wicker basket + rim at the origin.
+    var basket=new THREE.Mesh(new THREE.BoxGeometry(3.0,2.4,3.0),new THREE.MeshStandardMaterial({color:0x8a5a2b,roughness:0.85,metalness:0.02})); basket.position.y=-1.0; g.add(basket);
+    var rim=new THREE.Mesh(new THREE.BoxGeometry(3.34,0.42,3.34),new THREE.MeshStandardMaterial({color:0x6f4420,roughness:0.8})); rim.position.y=0.2; g.add(rim);
+    // Four suspension ropes: basket rim corners → throat.
+    var ropeMat=new THREE.MeshStandardMaterial({color:0x2b2b2b,roughness:0.9});
+    for(var c=0;c<4;c++){
+      var a2=Math.PI/4+c*Math.PI/2, bx=Math.cos(a2)*1.5, bz=Math.sin(a2)*1.5, tx=Math.cos(a2)*1.4, tz=Math.sin(a2)*1.4;
+      var top=new THREE.Vector3(tx,H0-1.0,tz), bot=new THREE.Vector3(bx,0.3,bz);
+      var mid=top.clone().add(bot).multiplyScalar(0.5), len=top.distanceTo(bot);
+      var rope=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,len,6),ropeMat);
+      rope.position.copy(mid);
+      rope.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),top.clone().sub(bot).normalize());
+      g.add(rope);
     }
-
-    // Main wings — swept + tapered, low-mid mount, with dihedral.
-    for(var si=-1;si<=1;si+=2){
-      var wing=surface([[0,3.4],[si*11,-1.6],[si*11,-3.6],[0,-3.8]],0.34,body);
-      wing.rotation.x=-Math.PI/2;
-      var piv=new THREE.Group(); piv.add(wing);
-      piv.position.set(si*1.3,-0.55,1.0); piv.rotation.z=si*0.06; g.add(piv);
-    }
-
-    // Rear-fuselage engines — nacelle + intake ring + exhaust + pylon, both sides.
-    for(var si=-1;si<=1;si+=2){
-      var nac=new THREE.Mesh(new THREE.CylinderGeometry(1.05,0.92,5,18),metal);
-      nac.rotation.x=Math.PI/2; nac.position.set(si*2.5,0.4,6); g.add(nac);
-      var intake=new THREE.Mesh(new THREE.TorusGeometry(0.95,0.16,10,18),darkM);
-      intake.position.set(si*2.5,0.4,3.55); g.add(intake);
-      var exh=new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.78,1.2,16),darkM);
-      exh.rotation.x=Math.PI/2; exh.position.set(si*2.5,0.4,8.7); g.add(exh);
-      var pylon=new THREE.Mesh(new THREE.BoxGeometry(1.3,0.5,2.4),body);
-      pylon.position.set(si*1.7,0.45,6); g.add(pylon);
-    }
-
-    // T-tail — swept navy fin + white horizontal stabilizers at its top.
-    var fin=surface([[8.5,1.4],[13,1.4],[13.2,6.6],[11,6.6]],0.3,accent); // pts = [aft(z), up(y)]
-    fin.rotation.y=-Math.PI/2; fin.position.x=0.15; g.add(fin);
-    for(var si=-1;si<=1;si+=2){
-      var stab=surface([[0,1.3],[si*4,-0.4],[si*4,-1.5],[0,-1.3]],0.26,body);
-      stab.rotation.x=-Math.PI/2; stab.position.set(0,6.6,11.4); g.add(stab);
-    }
+    g.userData={flameOuter:flameOuter,flameInner:flameInner,light:light};
     return g;
   }
-  var plane=buildJet(); scene.add(plane);
+  var balloon=buildBalloon(); scene.add(balloon);
+
+  // Flicker the burner flame + glow, flare it on burner/climb input, and add a slow floating bob.
+  function animateBalloon(now,dt){
+    var u=balloon.userData; if(!u) return;
+    var climbing=(keys['arrowup']?1:0)||((typeof touch!=='undefined'&&touch.active&&touch.py>0.2)?1:0);
+    var burn=0.4+0.6*st.boost+(climbing?0.35:0);
+    var fl=0.75+0.22*Math.sin(now*0.028)+0.12*(Math.random()-0.5);
+    if(u.flameOuter){u.flameOuter.scale.set(1+0.12*fl,(0.8+0.75*burn)*(0.92+0.16*fl),1+0.12*fl);u.flameOuter.material.opacity=0.5+0.35*fl;}
+    if(u.flameInner){u.flameInner.scale.set(1,0.7+0.65*burn,1);u.flameInner.material.opacity=0.55+0.3*fl;}
+    if(u.light){u.light.intensity=(0.45+1.9*burn)*(0.9+0.1*fl);}
+    balloon.position.y+=Math.sin(now*0.0011)*0.6;   // gentle float bob (visual only; physics uses st.pos)
+  }
 
   // ---------------------------------------------------------------- minimap (corner map of the west bank)
   // A tilted top-down second camera over the whole bbox, plus bright layer-1 markers (a peak pin at
@@ -263,9 +260,9 @@
   var SUNDIR=new THREE.Vector3(0.32,0.70,-0.64).normalize();   // high SE desert sun
   var SPAWN=new THREE.Vector3(0,1800,0), START_ALT=1800, facePeak=0;  // finalised once the DEM loads
   var st={pos:SPAWN.clone(),heading:0,pitch:-0.02,roll:0,throttle:0.4,speed:80,boost:0,ecl:0};
-  var MINS=55,MAXS=130,keys={},BOUND=12500;   // metres/second — at 1 unit = 1 m the HUD shows true ground speed
+  var MINS=28,MAXS=82,keys={},BOUND=12500;   // metres/second — a serene balloon drift (slower than the jet)
 
-  function resetFlight(){st.pos.copy(SPAWN);st.heading=facePeak;st.pitch=-0.02;st.roll=0;st.throttle=0.4;st.speed=80;st.ecl=0;}
+  function resetFlight(){st.pos.copy(SPAWN);st.heading=facePeak;st.pitch=-0.02;st.roll=0;st.throttle=0.4;st.speed=40;st.ecl=0;}
 
   // Seat the spawn over the Marsam Hotel, nose pointed at al-Qurn / the Theban hills (both from the baked coords).
   function setSpawn(){
@@ -274,15 +271,15 @@
     facePeak=Math.atan2(-gx,-gz);                     // heading whose forward (-sinθ,-cosθ) aims at the peak
     resetFlight();
     var q=new THREE.Quaternion().setFromEuler(new THREE.Euler(st.pitch,st.heading,st.roll,'YXZ'));
-    plane.position.copy(st.pos); plane.quaternion.copy(q);
-    camera.position.copy(st.pos).add(new THREE.Vector3(0,9,46).applyQuaternion(q));
+    balloon.position.copy(st.pos); balloon.quaternion.copy(q);
+    camera.position.copy(st.pos).add(new THREE.Vector3(0,14,60).applyQuaternion(q));
   }
 
   function kd(e){var k=e.key.toLowerCase();keys[k]=true;if(['arrowup','arrowdown','arrowleft','arrowright',' '].indexOf(k)>=0)e.preventDefault();}
   function ku(e){keys[e.key.toLowerCase()]=false;}
   window.addEventListener('keydown',kd);window.addEventListener('keyup',ku);
 
-  // ---- touch steering (mobile) — drag anywhere to pitch/bank; desktop keyboard is untouched ----
+  // ---- touch steering (mobile) — drag anywhere to climb/steer; desktop keyboard is untouched ----
   var touch={active:false,px:0,py:0,ox:0,oy:0,ref:200};
   function tStart(e){var t=e.touches[0];if(!t)return;touch.active=true;touch.ox=t.clientX;touch.oy=t.clientY;touch.px=0;touch.py=0;touch.ref=(Math.min(window.innerWidth,window.innerHeight)*0.28)||200;e.preventDefault();}
   function tMove(e){if(!touch.active)return;var t=e.touches[0];if(!t)return;touch.px=-Math.max(-1,Math.min(1,(t.clientX-touch.ox)/touch.ref));touch.py=-Math.max(-1,Math.min(1,(t.clientY-touch.oy)/touch.ref));e.preventDefault();}
@@ -328,20 +325,21 @@
   function loop(now){var dt=Math.min((now-last)/1000,0.05);last=now;
     if(started){
       var pIn=(keys['arrowup']?1:0)-(keys['arrowdown']?1:0),rIn=(keys['arrowleft']?1:0)-(keys['arrowright']?1:0),tIn=(keys['w']?1:0)-(keys['s']?1:0);
-      if(touch.active){pIn=touch.py;rIn=touch.px;} // mobile: finger drag steers pitch + bank
+      if(touch.active){pIn=touch.py;rIn=touch.px;} // mobile: finger drag steers climb + turn
       st.throttle=Math.max(0,Math.min(1,st.throttle+tIn*0.5*dt));st.boost+=(((keys[' ']?1:0))-st.boost)*Math.min(1,dt*4);
-      st.pitch+=pIn*0.9*dt;st.pitch-=st.pitch*0.6*dt;st.pitch=Math.max(-0.7,Math.min(0.7,st.pitch));
-      st.roll+=rIn*1.6*dt;st.roll-=st.roll*1.2*dt;st.roll=Math.max(-1.1,Math.min(1.1,st.roll));st.heading+=st.roll*0.6*dt;
-      var tgt=MINS+(MAXS-MINS)*st.throttle+st.boost*70;st.speed+=(tgt-st.speed)*Math.min(1,dt*1.5);
+      st.pitch+=pIn*0.7*dt;st.pitch-=st.pitch*0.8*dt;st.pitch=Math.max(-0.42,Math.min(0.42,st.pitch));           // gentle climb / descend
+      st.roll+=rIn*1.1*dt;st.roll-=st.roll*1.4*dt;st.roll=Math.max(-0.34,Math.min(0.34,st.roll));st.heading+=st.roll*1.25*dt; // slow lean-steer, stays upright
+      var tgt=MINS+(MAXS-MINS)*st.throttle+st.boost*52;st.speed+=(tgt-st.speed)*Math.min(1,dt*1.2);              // serene drift
       st.pos.addScaledVector(new THREE.Vector3(0,0,-1).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(st.pitch,st.heading,st.roll,'YXZ'))),st.speed*dt);
       var g=H(st.pos.x,st.pos.z),minY=g+22;if(st.pos.y<minY){st.pos.y=minY;if(st.pitch<0.05)st.pitch+=1.2*dt;}
       // soft turn-back at the edge of the baked area (no sea to fall into — just keep you over Luxor)
       if(Math.hypot(st.pos.x,st.pos.z)>BOUND){var want=Math.atan2(st.pos.x,st.pos.z),diff=want-st.heading;while(diff>Math.PI)diff-=2*Math.PI;while(diff<-Math.PI)diff+=2*Math.PI;st.heading+=diff*Math.min(1,dt*0.6);}
       if(keys['r'])resetFlight();
       var euler=new THREE.Euler(st.pitch,st.heading,st.roll,'YXZ'),q=new THREE.Quaternion().setFromEuler(euler),fwd=new THREE.Vector3(0,0,-1).applyQuaternion(q);
-      plane.position.copy(st.pos);plane.quaternion.copy(q);
-      var camPos=st.pos.clone().add(new THREE.Vector3(0,9,46).applyQuaternion(q));
-      camera.position.lerp(camPos,Math.min(1,dt*4));camera.lookAt(st.pos.clone().add(fwd.clone().multiplyScalar(60)));camera.up.set(0,1,0);
+      balloon.position.copy(st.pos);balloon.quaternion.copy(q);
+      animateBalloon(now,dt);
+      var camPos=st.pos.clone().add(new THREE.Vector3(0,14,60).applyQuaternion(q));
+      camera.position.lerp(camPos,Math.min(1,dt*2.4));camera.lookAt(st.pos.clone().add(fwd.clone().multiplyScalar(54)).add(new THREE.Vector3(0,9,0)));camera.up.set(0,1,0);
       // --- eclipse (choreography unchanged from the Iceland original) ---
       st.ecl+=dt*(keys['e']?9:1)/70;if(st.ecl>1)st.ecl-=1;var phase=st.ecl,sep=Math.abs(phase-0.5)*2,coverage=smooth(1.0,0.0,sep),totality=smooth(0.86,0.99,coverage);
       var sunPos=camera.position.clone().add(SUNDIR.clone().multiplyScalar(16000));sunS.position.copy(sunPos);corona.position.copy(sunPos);

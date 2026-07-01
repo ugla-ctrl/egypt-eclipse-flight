@@ -1,12 +1,13 @@
-# luxor · eclipse flight
+# egypt · eclipse flight
 
-A single-file WebGL flight simulator: fly the **real Theban west bank of Luxor, Egypt** — the Nile,
-the cultivated valley, the Valley of the Kings, and the pyramid-peak of **al-Qurn** — while a total
-solar eclipse sweeps the desert to totality. Three.js (r128, via CDN), no build step.
+A single-file WebGL flight simulator: drift a **hot-air balloon** over the **real Theban west bank of
+Luxor, Egypt** — the Nile, the cultivated valley, the Valley of the Kings, and the pyramid-peak of
+**al-Qurn** — while a total solar eclipse sweeps the desert to totality. Three.js (r128, via CDN), no build step.
 
 Built in the house style of the Iceland *hellissandur · eclipse flight* sim, retargeted to a desert:
-same chase-cam flight + real-DEM terrain + baked satellite imagery + corner minimap, but with a global
-elevation source (Luxor is at 25.7°N, far outside ArcticDEM) and a desert-appropriate totality.
+same chase-cam + real-DEM terrain + baked satellite imagery + corner minimap, but you fly a colourful
+balloon (Egyptian-jewel gores over a glowing burner + wicker basket) with a global elevation source
+(Luxor is at 25.7°N, far outside ArcticDEM) and a desert-appropriate totality.
 
 ## What's real here
 
@@ -16,13 +17,13 @@ terrain mesh and the flight collision, so they can never disagree:
 
 - the sharp escarpment where the green Nile valley (~41 m) steps up into the desert plateau,
 - the dendritic wadis of the Theban hills / Valley of the Kings,
-- **al-Qurn** (~420 m, "the Horn") — the natural pyramid you spawn pointed toward.
+- **al-Qurn** (~420 m, "the Horn") — the natural pyramid you drift toward.
 
 The **surface** is real too: **Esri World Imagery** is baked into a texture and draped over the terrain,
 so you fly over photographic Luxor — the Nile, the green cultivated strip, the desert, the temple sites.
 (If that texture ever fails to load, the sim falls back to an elevation colour-ramp, so it always works.)
 
-You spawn over the **Marsam Hotel** (25.7242° N, 32.6065° E) on the west bank, nose pointed at al-Qurn.
+You lift off over the **Marsam Hotel** (25.7242° N, 32.6065° E) on the west bank, drifting toward al-Qurn.
 
 The eclipse: no aurora at 25°N — instead the desert's signature **360° "false sunset"** rings the horizon
 in copper as the moon's shadow rushes in, stars come out, and the corona blazes. (Luxor sits near the
@@ -30,7 +31,7 @@ centreline of the total solar eclipse of **2 August 2027** — one of the longes
 
 ## Controls
 
-↑ ↓ pitch · ← → bank · W / S throttle · space boost · E hasten eclipse · R reset
+↑ ↓ climb · ← → steer · W / S drift · space burner · E hasten eclipse · R reset
 (mobile: drag anywhere to steer)
 
 ## Run locally
